@@ -1,6 +1,7 @@
 '''
-Nodes Widgit: Control Node, Path Planner Node, YOLO Node, GBCACHE, Mapper, ROIS(Fusion)
-For Each Node -> Label, Widget Type, Status Color [Binary; Is it delivering data? Yes or No]
+Nodes Widgit: Controls, Path Planner, Path Demo, GBCACHE, World Mapper
+                ROI(Fusion), Dock Detection, Task Manager, RIDD 3DOF
+For Each Node -> Label & Status Color [Binary; Is it delivering data? Yes(1) or No(0)]
 '''
 
 import sys
@@ -27,7 +28,7 @@ class NodeStatusWidget(QWidget):
             font-weight: bold;
         """)
 
-        # Small Margins 
+        # Set Margins (small)
         layout = QHBoxLayout()
         layout.setContentsMargins(2, 2, 2, 2)
         layout.addWidget(self.label)
@@ -40,7 +41,7 @@ class NodeStatusWidget(QWidget):
         }
 
     def set_status_from_code(self, code: int):
-        # Apply Background Color Using Status Code
+        # Set Background Color Using Status Code
         color = self.status_map.get(code, "gray")
         self.label.setStyleSheet(f"""
             border-radius: 4px;
@@ -52,6 +53,8 @@ class NodeStatusWidget(QWidget):
 
 class NodeStatusBridge(QObject):
     status_update = pyqtSignal(str, int)
+
+
 
 
 # Main Node Widget; all nodes in a 5x1 grid
