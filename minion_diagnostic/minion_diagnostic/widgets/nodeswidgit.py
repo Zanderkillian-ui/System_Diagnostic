@@ -57,7 +57,7 @@ class NodeStatusBridge(QObject):
 
 
 
-# Main Node Widget; all nodes in a 5x1 grid
+# Main Node Widget; all nodes in a 3x3 grid
 class NodePanel(QWidget):
     def __init__(self):
         super().__init__()
@@ -112,7 +112,7 @@ class NodePanel(QWidget):
         if node_name in self.nodes:
             self.nodes[node_name].set_status_from_code(status_code)
 
-# Change the status of a node by doing self.node["YOLO Node"].set_status_from_code(#(0-1))
+# Change the status of a node by doing self.node["Controls Node"].set_status_from_code(#(0-1))
 # 1 is green working
 # 0 is red not working
 
