@@ -1,6 +1,6 @@
 '''
-Nodes Widgit: Control Node, Path Planner Node, YOLO Node, GBCACHE, Mapper, ROIS(Fusion)
-For Each Node -> Label, Widget Type, Status Color [Binary; Is it delivering data? Yes or No]
+Sensor Widgit: Camera [w/ Rate], LiDAR, GPS
+For Each Node -> Label & Status Color [Binary; Is it delivering data? Yes or No]
 '''
 
 import sys
@@ -54,20 +54,20 @@ class NodeStatusBridge(QObject):
     status_update = pyqtSignal(str, int)
 
 
-# Main Node Widget; all nodes in a  grid
+# Main Node Widget; all nodes in a grid 3x1
 class NodePanel(QWidget):
     def __init__(self):
         super().__init__()
 
         self.node_names = [
-            "Camera Rate: {} Hz".format(camerarate),
-            "Lidar",
+            "Camera: {} Hz".format(camerarate),
+            "LiDAR",
             "GPS"
         ]
 
         self.nodes = {name: NodeStatusWidget(name) for name in self.node_names}
 
-        # 4x2 Grid Layout
+        # 3x1 Grid Layout
         layout = QGridLayout()
         layout.setSpacing(8)
 
@@ -88,8 +88,8 @@ class NodePanel(QWidget):
         self.bridge.status_update.connect(self.update_node_from_signal)
 
         # Demo Statuses
-        self.nodes["Camera Rate: {} Hz".format(camerarate)].set_status_from_code(1)
-        self.nodes["Lidar"].set_status_from_code(1)
+        self.nodes["Camera: {} Hz".format(camerarate)].set_status_from_code(1)
+        self.nodes["LiDAR"].set_status_from_code(1)
         self.nodes["GPS"].set_status_from_code(0)
         
 
