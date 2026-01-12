@@ -33,10 +33,10 @@ class NodeStatusWidget(QWidget):
         layout.addWidget(self.label)
         self.setLayout(layout)
 
-        # Background Color Options: Green(Yes,1) or Red(No,2)
+        # Background Color Options: Green(Yes,1) or Red(No,0)
         self.status_map = {
             1: "green",
-            2: "red",
+            0: "red",
         }
 
     def set_status_from_code(self, code: int):
@@ -54,27 +54,30 @@ class NodeStatusBridge(QObject):
     status_update = pyqtSignal(str, int)
 
 
-# Main Node Widget; all nodes in a 3x2 grid
+# Main Node Widget; all nodes in a 5x1 grid
 class NodePanel(QWidget):
     def __init__(self):
         super().__init__()
 
         self.node_names = [
-            "Control Node",
-            "Path Planner Node",
-            "YOLO Node",
+            "Controls",
+            "Path Planner",
+            "Path Demo",
             "GBCACHE",
-            "Mapper",
-            "ROIS (Fusion)"
+            "World Mapper",
+            "ROI (Fusion)",
+            "Dock Detection",
+            "Task Manager",
+            "PIDD 3DOF"
         ]
 
         self.nodes = {name: NodeStatusWidget(name) for name in self.node_names}
 
-        # 3x2 Grid Layout
+        # 3x3 Grid Layout
         layout = QGridLayout()
         layout.setSpacing(8)
 
-        rows = 2
+        rows = 3
         cols = 3
         index = 0
 
@@ -91,27 +94,31 @@ class NodePanel(QWidget):
         self.bridge.status_update.connect(self.update_node_from_signal)
 
         # Demo Statuses
-        self.nodes["Control Node"].set_status_from_code(1)
-        self.nodes["Path Planner Node"].set_status_from_code(2)
-        self.nodes["YOLO Node"].set_status_from_code(1)
-        self.nodes["GBCACHE"].set_status_from_code(2)
-        self.nodes["Mapper"].set_status_from_code(1)
-        self.nodes["ROIS (Fusion)"].set_status_from_code(1)
+        self.nodes["Controls"].set_status_from_code(1)
+        self.nodes["Path Planner"].set_status_from_code(0)
+        self.nodes["Path Demo"].set_status_from_code(0)
+        self.nodes["GBCACHE"].set_status_from_code(1)
+        self.nodes["World Mapper"].set_status_from_code(0)
+        self.nodes["ROI (Fusion)"].set_status_from_code(1)
+        self.nodes["Dock Detection"].set_status_from_code(1)
+        self.nodes["Task Manager"].set_status_from_code(0)
+        self.nodes["PIDD 3DOF"].set_status_from_code(0)
+
 
     def update_node_from_signal(self, node_name, status_code):
         if node_name in self.nodes:
             self.nodes[node_name].set_status_from_code(status_code)
 
-# Change the status of a node by doing self.node["YOLO Node"].set_status_from_code(#(1-2))
+# Change the status of a node by doing self.node["YOLO Node"].set_status_from_code(#(0-1))
 # 1 is green working
-# 2 is red not working
+# 0 is red not working
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     window = NodePanel()
-    window.setWindowTitle("Node Status Panel")
-    window.resize(450, 200)
+    window.setWindowTitle("Boat Nodes")
+    window.resize(150, 200)
     window.show()
 
     sys.exit(app.exec())
