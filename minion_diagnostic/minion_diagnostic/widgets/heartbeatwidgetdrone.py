@@ -1,5 +1,5 @@
 '''
-Heart Beat Widgit for Boat: The battery widget connected to the heartbeat to make sure they are on and connected to the boat
+Heart Beat Widgit for Drone: The battery widget connected to the heartbeat to make sure they are on and connected to the boat
 [Boolean; Is it connected? Yes(Green True) or No(Red False)]
 '''
 
@@ -7,11 +7,11 @@ import sys
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QVBoxLayout
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QRectF, QPointF
 from PyQt6.QtGui import QPainter, QColor, QFont, QPainterPath
 
 
-class BoatStatusIcon(QWidget):
+class DroneStatusIcon(QWidget):
     def __init__(self, connected=True, parent=None):
         super().__init__(parent)
         self.connected = connected
@@ -25,48 +25,71 @@ class BoatStatusIcon(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        status_color = QColor(0, 200, 0) if self.connected else QColor(200, 0, 0)
-        painter.setBrush(status_color)
+        color = QColor(0, 200, 0) if self.connected else QColor(200, 0, 0)
+        painter.setBrush(color)
         painter.setPen(Qt.PenStyle.NoPen)
 
         w = self.width()
         h = self.height()
+        cx = w // 2
+        cy = h // 2
 
-        # --- Hull ---
-        hull = QPainterPath()
-        hull.moveTo(w * 0.2, h * 0.62)
-        hull.lineTo(w * 0.8, h * 0.62)
-        hull.lineTo(w * 0.65, h * 0.78)
-        hull.lineTo(w * 0.35, h * 0.78)
-        hull.closeSubpath()
-        painter.drawPath(hull)
-
-        # --- Cabin ---
+        # --- Body ---
+        body_size = int(w * 0.20)
         painter.drawRoundedRect(
-            int(w * 0.36),
-            int(h * 0.45),
-            int(w * 0.28),
-            int(h * 0.15),
-            4,
-            4
+            cx - body_size // 2,
+            cy - body_size // 2,
+            body_size,
+            body_size,
+            6,
+            6
         )
 
-        # --- Mast ---
-        mast_width = 3
+        # --- Arms ---
+        arm_length = int(w * 0.30)
+        arm_width = int(w * 0.05)
+
+        # Horizontal arm
         painter.drawRect(
-            int(w * 0.5 - mast_width / 2),
-            int(h * 0.25),
-            mast_width,
-            int(h * 0.20)
+            cx - arm_length // 2,
+            cy - arm_width // 2,
+            arm_length,
+            arm_width
         )
 
-        # --- Flag ---
-        flag = QPainterPath()
-        flag.moveTo(w * 0.5, h * 0.25)
-        flag.lineTo(w * 0.68, h * 0.30)
-        flag.lineTo(w * 0.5, h * 0.35)
-        flag.closeSubpath()
-        painter.drawPath(flag)
+        # Vertical arm
+        painter.drawRect(
+            cx - arm_width // 2,
+            cy - arm_length // 2,
+            arm_width,
+            arm_length
+        )
+
+        # --- Rotors ---
+        rotor_radius = int(w * 0.10)
+        offsets = [
+            (-arm_length // 2, -arm_length // 2),
+            ( arm_length // 2, -arm_length // 2),
+            (-arm_length // 2,  arm_length // 2),
+            ( arm_length // 2,  arm_length // 2),
+        ]
+
+        for ox, oy in offsets:
+            painter.drawEllipse(
+                QPointF(cx + ox, cy + oy),
+                rotor_radius,
+                rotor_radius
+            )
+
+        # --- Rotor hubs ---
+        hub_radius = int(w * 0.025)
+        painter.setBrush(QColor(30, 30, 30))
+        for ox, oy in offsets:
+            painter.drawEllipse(
+                QPointF(cx + ox, cy + oy),
+                hub_radius,
+                hub_radius
+            )
 
 
 class BatteryWidget(QWidget):
@@ -80,7 +103,7 @@ class BatteryWidget(QWidget):
         self.update()
 
     def battery_color(self):
-        if self.percentage <= 10:
+        if self.percentage <= 20:
             return QColor(200, 0, 0)      # Red
         elif self.percentage <= 50:
             return QColor(220, 180, 0)    # Yellow
@@ -153,11 +176,11 @@ class StatusWidget(QWidget):
 
 # Change the values here
 
-        title = QLabel("Boat")
+        title = QLabel("Drone")
         title.setFont(QFont("Arial", 11, QFont.Weight.Bold))
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.status_circle = BoatStatusIcon(True)
+        self.status_circle = DroneStatusIcon(True)
         self.battery_widget = BatteryWidget(75)
 
         layout = QVBoxLayout()

@@ -1,3 +1,8 @@
+'''
+Heart Beat Widgit for Sub: The battery widget connected to the heartbeat to make sure they are on and connected to the boat
+[Boolean; Is it connected? Yes(Green True) or No(Red False)]
+'''
+
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QVBoxLayout
