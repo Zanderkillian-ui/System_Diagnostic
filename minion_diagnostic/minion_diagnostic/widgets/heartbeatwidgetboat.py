@@ -115,7 +115,7 @@ class BatteryWidget(QWidget):
             body_height // 2
         )
 
-        # --- Battery fill ---
+        # Battery fill
         fill_margin = 3
         fill_width = int((body_width - fill_margin * 2) * (self.percentage / 100))
         fill_height = body_height - fill_margin * 2
@@ -149,8 +149,19 @@ class StatusWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.setFixedSize(200, 200)
-        self.setStyleSheet("background-color: #1e1e1e; color: white;")
 
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        self.setObjectName("panel")
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #2b2b2b;
+                border: 2px solid #555555;
+                border-radius: 12px;
+                color: white;
+            }
+        """)
+        
 # Change the values here
 
         title = QLabel("Boat")
@@ -161,8 +172,8 @@ class StatusWidget(QWidget):
         self.battery_widget = BatteryWidget(75)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(8, 8, 8, 8)
-        layout.setSpacing(6)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(8)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)

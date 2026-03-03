@@ -58,6 +58,19 @@ class NodeStatusBridge(QObject):
 class NodePanel(QWidget):
     def __init__(self):
         super().__init__()
+        self.setFixedSize(200, 200)
+
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        self.setObjectName("panel")
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #2b2b2b;
+                border: 2px solid #555555;
+                border-radius: 12px;
+                color: white;
+            }
+        """)
 
         self.node_names = [
             "Camera: {} Hz".format(camerarate),
@@ -107,7 +120,6 @@ if __name__ == "__main__":
 
     window = NodePanel()
     window.setWindowTitle("Boat Sensors")
-    window.resize(150, 200)
     window.show()
 
     sys.exit(app.exec())

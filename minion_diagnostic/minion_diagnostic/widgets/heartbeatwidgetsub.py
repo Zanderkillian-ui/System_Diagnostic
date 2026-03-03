@@ -198,7 +198,17 @@ class StatusWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.setFixedSize(200, 200)
-        self.setStyleSheet("background-color: #1e1e1e; color: white;")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        self.setObjectName("panel")
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #2b2b2b;
+                border: 2px solid #555555;
+                border-radius: 12px;
+                color: white;
+            }
+        """)
 
 # Change the values here
 

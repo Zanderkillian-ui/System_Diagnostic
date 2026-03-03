@@ -62,6 +62,18 @@ class NodePanel(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setFixedSize(400, 200)
+
+        self.setObjectName("panel")
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #2b2b2b;
+                border: 2px solid #555555;
+                border-radius: 12px;
+                color: white;
+            }
+        """)
         self.node_names = [
             "Controls",
             "Path Planner",
@@ -121,7 +133,6 @@ if __name__ == "__main__":
 
     window = NodePanel()
     window.setWindowTitle("Boat Nodes")
-    window.resize(150, 200)
     window.show()
 
     sys.exit(app.exec())

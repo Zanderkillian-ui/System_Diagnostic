@@ -41,7 +41,7 @@ class DraggableWidget(QWidget):
         self.inner.setParent(self)
         self.inner.move(0, 0)
 
-        self.resize(self.inner.sizeHint())
+        self.resize(self.inner.size())
 
         self.drag_offset = None
         self.locked = False
@@ -56,16 +56,26 @@ class DraggableWidget(QWidget):
 
     def mouseMoveEvent(self, event):
         if self.locked or not self.drag_offset:
-            return
+             return
 
         if event.buttons() & Qt.MouseButton.LeftButton:
-            new_pos = event.globalPosition().toPoint() - self.drag_offset
+             parent = self.parentWidget()
+             if not parent:
+                return
 
-            x = round(new_pos.x() / GRID_SIZE) * GRID_SIZE
-            y = round(new_pos.y() / GRID_SIZE) * GRID_SIZE
+             new_pos = event.globalPosition().toPoint() - self.drag_offset
 
-            self.move(x, y)
-            event.accept()
+             x = round(new_pos.x() / GRID_SIZE) * GRID_SIZE
+             y = round(new_pos.y() / GRID_SIZE) * GRID_SIZE
+
+             max_x = parent.width() - self.width()
+             max_y = parent.height() - self.height()
+
+             x = max(0, min(x, max_x))
+             y = max(0, min(y, max_y))
+
+             self.move(x, y)
+             event.accept()
 
     def mouseReleaseEvent(self, event):
         self.drag_offset = None
@@ -77,7 +87,7 @@ class ModularDashboard(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Autonomous Boat Dashboard")
-        self.resize(900, 600)
+        self.setFixedSize(1000, 600)
 
         self.canvas = Canvas()
         self.setCentralWidget(self.canvas)
@@ -102,10 +112,10 @@ class ModularDashboard(QMainWindow):
 
         start_positions = [
             (0, 0),
-            (100, 0),
-            (200, 0),
-            (0, 100),
-            (100, 100),
+            (800, 400),
+            (600, 400),
+            (400, 400),
+            (0, 400),
         ]
 
         for widget, (x, y) in zip(self.widgets, start_positions):
@@ -114,32 +124,31 @@ class ModularDashboard(QMainWindow):
             widget.show()
 
     def create_lock_ui(self):
-        # Label above button
         self.lock_label = QLabel("UNLOCKED", self.canvas)
         self.lock_label.setStyleSheet("color: white; font-weight: bold;")
         self.lock_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # Circular button
-        self.lock_button = QPushButton("🔓", self.canvas)
-        self.lock_button.setFixedSize(80, 80)
+        self.lock_button = QPushButton("", self.canvas)  
+        self.lock_button.setFixedSize(60, 60)
         self.lock_button.clicked.connect(self.toggle_lock)
         self.lock_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.lock_button.setFlat(True)
 
-        self.update_button_style(locked=False)
+        self.locked_state = False  
+
+        self.update_button_style()
         self.update_lock_ui_position()
 
         self.lock_label.show()
         self.lock_button.show()
 
-    def update_button_style(self, locked):
-        if locked:
+    def update_button_style(self):
+        if self.locked_state:
             self.lock_button.setStyleSheet("""
                 QPushButton {
-                    border-radius: 40px;
+                    border-radius: 30px;
                     background-color: #cc4444;
                     border: none;
-                    color: white;
-                    font-size: 24px;
                 }
                 QPushButton:hover {
                     background-color: #ff6666;
@@ -149,11 +158,9 @@ class ModularDashboard(QMainWindow):
         else:
             self.lock_button.setStyleSheet("""
                 QPushButton {
-                    border-radius: 40px;
+                    border-radius: 30px;
                     background-color: #44aa44;
                     border: none;
-                    color: white;
-                    font-size: 24px;
                 }
                 QPushButton:hover {
                     background-color: #66cc66;
@@ -164,13 +171,11 @@ class ModularDashboard(QMainWindow):
     def update_lock_ui_position(self):
         grid_x = (self.canvas.width() // GRID_SIZE - 1) * GRID_SIZE
 
-        # Center button in top-right cell
         btn_x = grid_x + (GRID_SIZE - self.lock_button.width()) // 2
-        btn_y = (GRID_SIZE - self.lock_button.height()) // 2
+        btn_y = GRID_SIZE // 2 - self.lock_button.height() // 2
 
         self.lock_button.move(btn_x, btn_y)
 
-        # Label above button
         self.lock_label.setFixedWidth(GRID_SIZE)
         self.lock_label.move(grid_x, 0)
 
@@ -179,13 +184,11 @@ class ModularDashboard(QMainWindow):
         self.update_lock_ui_position()
 
     def toggle_lock(self):
-        locked = self.lock_button.text() == "🔓"
-
-        self.lock_button.setText("🔒" if locked else "🔓")
-        self.update_button_style(locked)
+        self.locked_state = not self.locked_state
+        self.update_button_style()
 
         for widget in self.widgets:
-            widget.locked = locked
+            widget.locked = self.locked_state
 
 
 if __name__ == "__main__":
