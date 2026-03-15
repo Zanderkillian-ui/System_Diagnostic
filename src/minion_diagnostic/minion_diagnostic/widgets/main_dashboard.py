@@ -5,12 +5,11 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QColor, QPen
 
-from nodeswidgit import NodePanel
-from heartbeatwidgetboat import StatusWidget as BoatHeartPanel
-from heartbeatwidgetdrone import StatusWidget as DroneHeartPanel
-from heartbeatwidgetsub import StatusWidget as SubHeartPanel
-from sensorswidgit import NodePanel as SensorsPanel
-
+from .nodeswidgit import NodePanel
+from .heartbeatwidgetboat import StatusWidget as BoatHeartPanel
+from .heartbeatwidgetdrone import StatusWidget as DroneHeartPanel
+from .heartbeatwidgetsub import StatusWidget as SubHeartPanel
+from .sensorswidgit import NodePanel as SensorsPanel
 
 GRID_SIZE = 100
 

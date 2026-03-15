@@ -2,15 +2,17 @@
 Sensor Widgit: Camera [w/ Rate], LiDAR, GPS
 For Each Node -> Label & Status Color [Binary; Is it delivering data? Yes or No]
 '''
-
+# Hello
 import sys
 from PyQt6.QtCore import Qt, pyqtSignal, QObject
-from PyQt6.QtGui import QColor, QPalette
+from PyQt6.QtGui import QColor, QPalette, QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QHBoxLayout,
     QVBoxLayout, QFrame, QGridLayout
 )
-camerarate=50
+from ..ros.camera_subscriber import CameraRateSubscriber
+from ..ros.ros_manager import ROSWorker
+
 class NodeStatusWidget(QWidget):
     # Node Widget
     def __init__(self, node_name: str):
@@ -58,6 +60,7 @@ class NodeStatusBridge(QObject):
 class NodePanel(QWidget):
     def __init__(self):
         super().__init__()
+
         self.setFixedSize(200, 200)
 
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -73,7 +76,7 @@ class NodePanel(QWidget):
         """)
 
         self.node_names = [
-            "Camera: {} Hz".format(camerarate),
+            "Camera",
             "LiDAR",
             "GPS"
         ]
@@ -101,10 +104,20 @@ class NodePanel(QWidget):
         self.bridge.status_update.connect(self.update_node_from_signal)
 
         # Demo Statuses
-        self.nodes["Camera: {} Hz".format(camerarate)].set_status_from_code(1)
+        # self.nodes["Camera: {} Hz".format(camerarate)].set_status_from_code(1)
         self.nodes["LiDAR"].set_status_from_code(1)
         self.nodes["GPS"].set_status_from_code(0)
         
+    def update_camera_rate(self, hz):
+
+        label = self.nodes["Camera"].label
+
+        label.setText(f"Camera: {hz:.1f} Hz")
+
+        if hz >= 5:
+            self.nodes["Camera"].set_status_from_code(1)
+        else:
+            self.nodes["Camera"].set_status_from_code(0)
 
 
     def update_node_from_signal(self, node_name, status_code):
