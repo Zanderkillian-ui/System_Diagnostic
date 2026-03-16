@@ -10,6 +10,7 @@ from .heartbeatwidgetboat import StatusWidget as BoatHeartPanel
 from .heartbeatwidgetdrone import StatusWidget as DroneHeartPanel
 from .heartbeatwidgetsub import StatusWidget as SubHeartPanel
 from .sensorswidgit import NodePanel as SensorsPanel
+from ..ros.ros_manager import ROSWorker
 
 GRID_SIZE = 100
 
@@ -55,26 +56,26 @@ class DraggableWidget(QWidget):
 
     def mouseMoveEvent(self, event):
         if self.locked or not self.drag_offset:
-             return
+            return
 
         if event.buttons() & Qt.MouseButton.LeftButton:
-             parent = self.parentWidget()
-             if not parent:
+            parent = self.parentWidget()
+            if not parent:
                 return
 
-             new_pos = event.globalPosition().toPoint() - self.drag_offset
+            new_pos = event.globalPosition().toPoint() - self.drag_offset
 
-             x = round(new_pos.x() / GRID_SIZE) * GRID_SIZE
-             y = round(new_pos.y() / GRID_SIZE) * GRID_SIZE
+            x = round(new_pos.x() / GRID_SIZE) * GRID_SIZE
+            y = round(new_pos.y() / GRID_SIZE) * GRID_SIZE
 
-             max_x = parent.width() - self.width()
-             max_y = parent.height() - self.height()
+            max_x = parent.width() - self.width()
+            max_y = parent.height() - self.height()
 
-             x = max(0, min(x, max_x))
-             y = max(0, min(y, max_y))
+            x = max(0, min(x, max_x))
+            y = max(0, min(y, max_y))
 
-             self.move(x, y)
-             event.accept()
+            self.move(x, y)
+            event.accept()
 
     def mouseReleaseEvent(self, event):
         self.drag_offset = None
@@ -82,8 +83,10 @@ class DraggableWidget(QWidget):
 
 
 class ModularDashboard(QMainWindow):
-    def __init__(self):
+    def __init__(self, ros_worker):
         super().__init__()
+
+        self.ros_worker = ros_worker
 
         self.setWindowTitle("Autonomous Boat Dashboard")
         self.setFixedSize(1000, 600)
@@ -99,7 +102,7 @@ class ModularDashboard(QMainWindow):
         boat_heart = BoatHeartPanel()
         drone_heart = DroneHeartPanel()
         sub_heart = SubHeartPanel()
-        sensors_panel = SensorsPanel()
+        sensors_panel = SensorsPanel(ros_worker=self.ros_worker)
 
         self.widgets = [
             DraggableWidget(nodes_panel),
@@ -127,13 +130,13 @@ class ModularDashboard(QMainWindow):
         self.lock_label.setStyleSheet("color: white; font-weight: bold;")
         self.lock_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.lock_button = QPushButton("", self.canvas)  
+        self.lock_button = QPushButton("", self.canvas)
         self.lock_button.setFixedSize(60, 60)
         self.lock_button.clicked.connect(self.toggle_lock)
         self.lock_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.lock_button.setFlat(True)
 
-        self.locked_state = False  
+        self.locked_state = False
 
         self.update_button_style()
         self.update_lock_ui_position()
@@ -189,9 +192,16 @@ class ModularDashboard(QMainWindow):
         for widget in self.widgets:
             widget.locked = self.locked_state
 
+    def closeEvent(self, event):
+        self.ros_worker.shutdown()
+        event.accept()
+
 
 if __name__ == "__main__":
+    import rclpy
+    rclpy.init()
+    ros_worker = ROSWorker()
     app = QApplication(sys.argv)
-    window = ModularDashboard()
+    window = ModularDashboard(ros_worker=ros_worker)
     window.show()
     sys.exit(app.exec())

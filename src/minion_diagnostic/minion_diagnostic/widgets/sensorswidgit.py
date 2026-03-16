@@ -1,17 +1,18 @@
 '''
-Sensor Widgit: Camera [w/ Rate], LiDAR, GPS
+Sensor Widgit: Camera [w/ Rate], LiDAR [w/ Rate], GPS [w/ Rate]
 For Each Node -> Label & Status Color [Binary; Is it delivering data? Yes or No]
 '''
-# Hello
+
 import sys
 from PyQt6.QtCore import Qt, pyqtSignal, QObject
-from PyQt6.QtGui import QColor, QPalette, QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QHBoxLayout,
     QVBoxLayout, QFrame, QGridLayout
 )
 from ..ros.camera_subscriber import CameraRateSubscriber
-from ..ros.ros_manager import ROSWorker
+from ..ros.lidar_subscriber import LidarRateSubscriber
+from ..ros.gps_subscriber import GpsRateSubscriber
+
 
 class NodeStatusWidget(QWidget):
     # Node Widget
@@ -29,7 +30,7 @@ class NodeStatusWidget(QWidget):
             font-weight: bold;
         """)
 
-        # Small Margins 
+        # Small Margins
         layout = QHBoxLayout()
         layout.setContentsMargins(2, 2, 2, 2)
         layout.addWidget(self.label)
@@ -58,7 +59,7 @@ class NodeStatusBridge(QObject):
 
 # Main Node Widget; all nodes in a grid 3x1
 class NodePanel(QWidget):
-    def __init__(self):
+    def __init__(self, ros_worker=None):
         super().__init__()
 
         self.setFixedSize(200, 200)
@@ -103,15 +104,24 @@ class NodePanel(QWidget):
         self.bridge = NodeStatusBridge()
         self.bridge.status_update.connect(self.update_node_from_signal)
 
-        # Demo Statuses
-        # self.nodes["Camera: {} Hz".format(camerarate)].set_status_from_code(1)
-        self.nodes["LiDAR"].set_status_from_code(1)
-        self.nodes["GPS"].set_status_from_code(0)
-        
+        # Connect ROS subscribers if a ros_worker was provided
+        if ros_worker is not None:
+            self._connect_subscribers(ros_worker)
+
+    def _connect_subscribers(self, ros_worker):
+
+        self.camera_sub = CameraRateSubscriber(ros_worker.node)
+        self.camera_sub.signals.rate_update.connect(self.update_camera_rate)
+
+        self.lidar_sub = LidarRateSubscriber(ros_worker.node)
+        self.lidar_sub.signals.rate_update.connect(self.update_lidar_rate)
+
+        self.gps_sub = GpsRateSubscriber(ros_worker.node)
+        self.gps_sub.signals.rate_update.connect(self.update_gps_rate)
+
     def update_camera_rate(self, hz):
 
         label = self.nodes["Camera"].label
-
         label.setText(f"Camera: {hz:.1f} Hz")
 
         if hz >= 5:
@@ -119,12 +129,31 @@ class NodePanel(QWidget):
         else:
             self.nodes["Camera"].set_status_from_code(0)
 
+    def update_lidar_rate(self, hz):
+
+        label = self.nodes["LiDAR"].label
+        label.setText(f"LiDAR: {hz:.1f} Hz")
+
+        if hz >= 5:
+            self.nodes["LiDAR"].set_status_from_code(1)
+        else:
+            self.nodes["LiDAR"].set_status_from_code(0)
+
+    def update_gps_rate(self, hz):
+
+        label = self.nodes["GPS"].label
+        label.setText(f"GPS: {hz:.1f} Hz")
+
+        if hz >= 1:
+            self.nodes["GPS"].set_status_from_code(1)
+        else:
+            self.nodes["GPS"].set_status_from_code(0)
 
     def update_node_from_signal(self, node_name, status_code):
         if node_name in self.nodes:
             self.nodes[node_name].set_status_from_code(status_code)
 
-# Change the status of a node by doing self.node["Lidar"].set_status_from_code(#(0-1))
+# Change the status of a node by doing self.node["LiDAR"].set_status_from_code(#(0-1))
 # 1 is green working
 # 0 is red not working
 
