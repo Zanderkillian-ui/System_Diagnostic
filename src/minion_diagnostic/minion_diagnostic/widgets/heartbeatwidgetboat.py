@@ -9,10 +9,11 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QColor, QFont, QPainterPath
+from ..ros.boat_heartbeat_subscriber import BoatHeartbeatSubscriber
 
 
 class BoatStatusIcon(QWidget):
-    def __init__(self, connected=True, parent=None):
+    def __init__(self, connected=False, parent=None):
         super().__init__(parent)
         self.connected = connected
         self.setFixedSize(100, 100)
@@ -70,7 +71,7 @@ class BoatStatusIcon(QWidget):
 
 
 class BatteryWidget(QWidget):
-    def __init__(self, percentage=75, parent=None):
+    def __init__(self, percentage=0, parent=None):
         super().__init__(parent)
         self.percentage = percentage
         self.setFixedSize(180, 45)
@@ -146,10 +147,10 @@ class BatteryWidget(QWidget):
 
 
 class StatusWidget(QWidget):
-    def __init__(self):
+    def __init__(self, ros_worker=None):
         super().__init__()
         self.setFixedSize(200, 200)
-
+ 
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         self.setObjectName("panel")
@@ -161,26 +162,50 @@ class StatusWidget(QWidget):
                 color: white;
             }
         """)
-        
-# Change the values here
-
+ 
         title = QLabel("Boat")
         title.setFont(QFont("Arial", 11, QFont.Weight.Bold))
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.status_circle = BoatStatusIcon(True)
-        self.battery_widget = BatteryWidget(75)
-
+        title.setStyleSheet("border: none; background: transparent;")
+ 
+        self.status_icon = BoatStatusIcon(connected=False)
+        self.battery     = BatteryWidget(0)
+ 
+        self.mode_label  = QLabel("Mode: --")
+        self.mode_label.setFont(QFont("Arial", 9))
+        self.mode_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.mode_label.setStyleSheet("color: white; border: none; background: transparent;")
+ 
         layout = QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(8)
+        layout.setContentsMargins(10, 8, 10, 8)
+        layout.setSpacing(6)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.status_circle, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.battery_widget, alignment=Qt.AlignmentFlag.AlignCenter)
-
+ 
+        layout.addWidget(title,            alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.status_icon, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.battery,     alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.mode_label,  alignment=Qt.AlignmentFlag.AlignCenter)
+ 
         self.setLayout(layout)
+ 
+        if ros_worker is not None:
+            self._connect_subscriber(ros_worker)
+ 
+    def _connect_subscriber(self, ros_worker):
+ 
+        self.heartbeat_sub = BoatHeartbeatSubscriber(ros_worker.node)
+        self.heartbeat_sub.signals.connection_status.connect(self.update_connection_status)
+        self.heartbeat_sub.signals.battery_update.connect(self.update_battery)
+        self.heartbeat_sub.signals.mode_update.connect(self.update_mode)
+ 
+    def update_connection_status(self, connected: bool):
+        self.status_icon.set_connected(connected)
+ 
+    def update_battery(self, pct: float):
+        self.battery.set_percentage(int(pct))
+ 
+    def update_mode(self, mode: str):
+        self.mode_label.setText(f"Mode: {mode}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

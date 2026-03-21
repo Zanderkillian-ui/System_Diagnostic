@@ -100,7 +100,7 @@ class ModularDashboard(QMainWindow):
     def add_widgets(self):
         nodes_panel = NodePanel()
         boat_heart = BoatHeartPanel()
-        drone_heart = DroneHeartPanel()
+        drone_heart = DroneHeartPanel(ros_worker=self.ros_worker)
         sub_heart = SubHeartPanel()
         sensors_panel = SensorsPanel(ros_worker=self.ros_worker)
 
