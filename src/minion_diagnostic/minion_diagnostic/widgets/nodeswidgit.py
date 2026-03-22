@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QHBoxLayout,
     QVBoxLayout, QFrame, QGridLayout
 )
+from ..ros.nodes_subscriber import DiagnosticsSubscriber
 
 class NodeStatusWidget(QWidget):
     # Node Widget
@@ -55,11 +56,9 @@ class NodeStatusBridge(QObject):
     status_update = pyqtSignal(str, int)
 
 
-
-
 # Main Node Widget; all nodes in a 3x3 grid
 class NodePanel(QWidget):
-    def __init__(self):
+    def __init__(self, ros_worker=None):
         super().__init__()
 
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -108,19 +107,15 @@ class NodePanel(QWidget):
         self.bridge = NodeStatusBridge()
         self.bridge.status_update.connect(self.update_node_from_signal)
 
-        # Demo Statuses
-        self.nodes["Controls"].set_status_from_code(1)
-        self.nodes["Path Planner"].set_status_from_code(0)
-        self.nodes["Path Demo"].set_status_from_code(0)
-        self.nodes["GBCACHE"].set_status_from_code(1)
-        self.nodes["World Mapper"].set_status_from_code(0)
-        self.nodes["ROI (Fusion)"].set_status_from_code(1)
-        self.nodes["Dock Detection"].set_status_from_code(1)
-        self.nodes["Task Manager"].set_status_from_code(0)
-        self.nodes["PIDD 3DOF"].set_status_from_code(0)
+        if ros_worker is not None:
+            self._connect_subscriber(ros_worker)
+            
+    def _connect_subscriber(self, ros_worker):
+ 
+        self.diagnostics_sub = DiagnosticsSubscriber(ros_worker.node)
+        self.diagnostics_sub.signals.node_status_update.connect(self.update_node_from_signal)
 
-
-    def update_node_from_signal(self, node_name, status_code):
+    def update_node_from_signal(self, node_name: str, status_code: int):
         if node_name in self.nodes:
             self.nodes[node_name].set_status_from_code(status_code)
 

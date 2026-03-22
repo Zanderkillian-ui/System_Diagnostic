@@ -98,9 +98,9 @@ class ModularDashboard(QMainWindow):
         self.create_lock_ui()
 
     def add_widgets(self):
-        nodes_panel = NodePanel()
-        boat_heart = BoatHeartPanel()
-        drone_heart = DroneHeartPanel(ros_worker=self.ros_worker)
+        nodes_panel = NodePanel(ros_worker=self.ros_worker)
+        boat_heart = BoatHeartPanel(ros_worker=self.ros_worker)
+        drone_heart = DroneHeartPanel()
         sub_heart = SubHeartPanel()
         sensors_panel = SensorsPanel(ros_worker=self.ros_worker)
 

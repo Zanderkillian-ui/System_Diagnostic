@@ -171,11 +171,6 @@ class StatusWidget(QWidget):
         self.status_icon = BoatStatusIcon(connected=False)
         self.battery     = BatteryWidget(0)
  
-        self.mode_label  = QLabel("Mode: --")
-        self.mode_label.setFont(QFont("Arial", 9))
-        self.mode_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.mode_label.setStyleSheet("color: white; border: none; background: transparent;")
- 
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 8, 10, 8)
         layout.setSpacing(6)
@@ -184,7 +179,6 @@ class StatusWidget(QWidget):
         layout.addWidget(title,            alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.status_icon, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.battery,     alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.mode_label,  alignment=Qt.AlignmentFlag.AlignCenter)
  
         self.setLayout(layout)
  
@@ -196,7 +190,6 @@ class StatusWidget(QWidget):
         self.heartbeat_sub = BoatHeartbeatSubscriber(ros_worker.node)
         self.heartbeat_sub.signals.connection_status.connect(self.update_connection_status)
         self.heartbeat_sub.signals.battery_update.connect(self.update_battery)
-        self.heartbeat_sub.signals.mode_update.connect(self.update_mode)
  
     def update_connection_status(self, connected: bool):
         self.status_icon.set_connected(connected)
@@ -204,8 +197,6 @@ class StatusWidget(QWidget):
     def update_battery(self, pct: float):
         self.battery.set_percentage(int(pct))
  
-    def update_mode(self, mode: str):
-        self.mode_label.setText(f"Mode: {mode}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
